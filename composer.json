@@ -1,0 +1,47 @@
+{
+  "name": "sunnysideup/page-favourites-bookmarker",
+  "description": "Works with an npm package of the same name to allow bookmarking any page on a website and saving them to the user account, if logged-in",
+  "type": "silverstripe-vendormodule",
+  "keywords": [
+    "favourite",
+    "favorite",
+    "bookmark",
+    "bookmarking"
+  ],
+  "license": "BSD-3-Clause",
+  "require": {
+    "silverstripe/framework": "^5.0",
+    "silverstripe/admin": "^2.0"
+  },
+  "require-dev": {
+    "sunnysideup/sswebpack_engine_only": "dev-master",
+    "silverleague/ideannotator": "*",
+    "phpunit/phpunit": "^9.6",
+    "squizlabs/php_codesniffer": "^3.7",
+    "silverstripe/standards": "^1",
+    "phpstan/extension-installer": "^1.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "Sunnysideup\\PageFavouritesBookmarker\\": "src/"
+    }
+  },
+  "extra": {
+    "expose": [
+      "client/dist"
+    ]
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "bin": [
+    "bin/sake-npm-build-page-favourites-bookmarker.sh",
+    "bin/sake-npm-watch-page-favourites-bookmarker.sh"
+  ],
+  "authors": [
+    {
+      "name": "Nicolaas Thiemen Francken",
+      "email": "modules@sunnysideup.co.nz",
+      "role": "lead developer"
+    }
+  ]
+}
