@@ -3,6 +3,8 @@
 namespace Sunnysideup\PageFavouritesBookmarker\Model;
 
 use Page;
+use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\ORM\DataObject;
 
 class Bookmark extends DataObject
 {
@@ -47,5 +49,19 @@ class Bookmark extends DataObject
                 }
             }
         }
+    }
+    public function canCreate($member = null, $context = [])
+    {
+        return false; // Prevent creation of new bookmarks directly
+    }
+
+    public function canEdit($member = null)
+    {
+        return false;
+    }
+
+    public function canDelete($member = null)
+    {
+        return false;
     }
 }

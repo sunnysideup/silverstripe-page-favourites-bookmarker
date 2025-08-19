@@ -3,6 +3,10 @@
 namespace Sunnysideup\PageFavouritesBookmarker\Model;
 
 use Page;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\Security\Member;
+use SilverStripe\Security\Security;
+use Sunnysideup\PageFavouritesBookmarker\Api\CodeMaker;
 
 class BookmarkSession extends DataObject
 {
@@ -10,6 +14,8 @@ class BookmarkSession extends DataObject
 
     private static $casting = [
         'Title' => 'Varchar',
+        'Code' => 'Varchar',
+        'Session' => 'Varchar',
     ];
 
     private static $has_one = [
@@ -31,5 +37,16 @@ class BookmarkSession extends DataObject
             return $count . "Bookmark" . $s . ' for ' . $this->Member()->getName();
         }
         return $count . 'Anonymous Bookmark' . $s . ' ';
+    }
+
+    public function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+        if (!$this->Code) {
+            $this->Code = CodeMaker::make_alpha_num_code(10);
+        }
+        if (! $this->MemberID && Security::getCurrentUser()) {
+            $this->MemberID = Security::getCurrentUser()->ID;
+        }
     }
 }
