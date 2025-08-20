@@ -1,1 +1,8 @@
 # see https://docs.silverstripe.org/en/developer_guides/configuration/configuration/
+
+---
+Name: PageFavouritesBookmarkerRoutes
+---
+SilverStripe\Control\Director:
+  rules:
+    save-my-favourites//$Action/$ID/$OtherID: 'Sunnysideup\PageFavouritesBookmarker\Control\BookmarkController'

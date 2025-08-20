@@ -7,7 +7,7 @@ namespace Sunnysideup\PageFavouritesBookmarker\Api;
 class CodeMaker
 {
 
-    public static function make_alpha_num_code(int $length = 10): string
+    public static function make_alpha_num_code(int $length = 12): string
     {
         $chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $charLen = strlen($chars);

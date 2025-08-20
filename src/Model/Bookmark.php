@@ -17,7 +17,14 @@ class Bookmark extends DataObject
 
     private static $has_one = [
         'Page' => Page::class,
-        'BookmarkSession' => BookmarkSession::class,
+        'BookmarkList' => BookmarkList::class,
+    ];
+
+    private static $summary_fields = [
+        'Title' => 'Page Title',
+        'URL' => 'URL',
+        'BookmarkList.Title' => 'List',
+        'Created.Ago' => 'Created',
     ];
 
     private static $indexes = [
@@ -40,10 +47,8 @@ class Bookmark extends DataObject
     {
         if (! $this->PageID) {
             $parts = parse_url($this->URL);
-            if (isset($parts['path'])) {
-                $segments = explode('/', trim($parts['path'], '/'));
-                $segments = array_filter($segments);
-                $page = SiteTree::get_by_link($segments);
+            if (!empty($parts['path'])) {
+                $page = SiteTree::get_by_link($parts['path']);
                 if ($page) {
                     $this->PageID = $page->ID;
                 }
