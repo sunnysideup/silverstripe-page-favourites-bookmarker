@@ -3,10 +3,13 @@
 namespace Sunnysideup\PageFavouritesBookmarker\Model;
 
 use Page;
+use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
 use Sunnysideup\PageFavouritesBookmarker\Api\CodeMaker;
+use Sunnysideup\PageFavouritesBookmarker\Control\BookmarkController;
 
 class BookmarkList extends DataObject
 {
@@ -77,6 +80,19 @@ class BookmarkList extends DataObject
         return 'Anonymous';
     }
 
+    public function getCMSFields()
+    {
+        $fields = parent::getCMSFields();
+        $fields->addFieldsToTab(
+            'Root.Main',
+            [
+                ReadonlyField::create('ShareLinkNice', 'Share Link', DBHTMLText::create()
+                    ->setValue('<a href="' . $this->ShareLink() . '" target="_blank">' . $this->ShareLink() . '</a>')),
+            ]
+        );
+        return $fields;
+    }
+
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
@@ -101,5 +117,10 @@ class BookmarkList extends DataObject
     public function canDelete($member = null)
     {
         return false; // Prevent deletion of bookmark lists directly
+    }
+
+    public function ShareLink()
+    {
+        return BookmarkController::my_link('share' . '/' . $this->Code);
     }
 }

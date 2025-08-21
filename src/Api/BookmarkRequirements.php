@@ -8,9 +8,11 @@ use SilverStripe\View\Requirements;
 
 class BookmarkRequirements
 {
-    public static function js(): void
+    public static function require_page_specific_js(?Controller $controller = null): void
     {
-        $controller = Controller::curr();
+        if (!$controller) {
+            $controller = Controller::curr();
+        }
         $loadOnThisPage = $controller->hasMethod('PageFavouritesBookmarkerLoadOnThisPage')
             ? $controller->PageFavouritesBookmarkerLoadOnThisPage()
             : true;

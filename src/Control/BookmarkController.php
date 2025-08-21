@@ -6,6 +6,7 @@ use SilverStripe\Control\Controller;
 use SilverStripe\Control\Cookie;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\Session;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Security\Security;
 use Sunnysideup\PageFavouritesBookmarker\Api\CodeMaker;
 use Sunnysideup\PageFavouritesBookmarker\Model\BookmarkList;
@@ -13,37 +14,65 @@ use Sunnysideup\PageFavouritesBookmarker\Model\BookmarkList;
 class BookmarkController extends Controller
 {
 
+    private static $url_segment = 'save-my-favourites';
     private static $allowed_actions = [
         'events',
         'bookmarks',
-        'load',
+        'share',
     ];
+
+
 
     protected $bookmarkList;
 
     public function init()
     {
         parent::init();
-        $this->initSession();
+    }
+
+    public static function my_link(?string $action = null): string
+    {
+        $url = Config::inst()->get(static::class, 'url_segment');
+        return Controller::join_links($url, $action);
     }
 
     public function load($request = null)
     {
-        $code = $request ? $request->getVar('ID') : '';
-        $list = BookmarkList::get()->filter(['Code' => $code])->first();
-        if ($list) {
+        $this->initSession($request->getVar('ID'));
+        if ($this->bookmarkList) {
             return $this->sendResponse([
                 'status' => 'success',
-                'bookmarks' => $list->Bookmarks()->toArray(),
-                'numberOfBookmarks' => $list->Bookmarks()->count(),
+                'bookmarks' => $this->bookmarkList->Bookmarks()->toArray(),
+                'numberOfBookmarks' => $this->bookmarkList->Bookmarks()->count(),
             ]);
         } else {
             return $this->sendResponse(['status' => 'error', 'message' => 'Bookmark list not found'], 404);
         }
     }
 
+    public function share($request = null)
+    {
+        $this->initSession($request->getVar('ID'));
+        $data = [];
+        foreach ($this->bookmarkList->Bookmarks() as $bookmark) {
+            $data[] = [
+                'title' => $bookmark->Title,
+                'url' => $bookmark->URL,
+            ];
+        }
+        return $this->renderWith(
+            BookmarkController::class . '_share',
+            [
+                'BookmarkList' => json_encode($data),
+                'BookmarkListCode' => $this->bookmarkList->Code,
+                'RedirectURL' => '/',
+            ]
+        );
+    }
+
     public function events()
     {
+        $this->initSession();
         $data = $this->getRequestJson();
         $payload = $data['payload'] ?? null;
         if (isset($data['type'])) {
@@ -139,10 +168,18 @@ class BookmarkController extends Controller
                 'MemberID' => $member->ID,
             ];
         } else {
+            $cookieCode = Cookie::get('pf_session_code');
             if (! $codeFromFrontEnd) {
-                $codeFromFrontEnd = CodeMaker::make_alpha_num_code(12);
+                $codeFromFrontEnd = $cookieCode;
+                // If no code is provided from the front end, generate a new one
+                if (! $codeFromFrontEnd) {
+                    $codeFromFrontEnd = CodeMaker::make_alpha_num_code(12);
+                }
             }
-            Cookie::set('pf_session_code', $codeFromFrontEnd, 99999, '/', null, true, true);
+            if ($cookieCode !== $codeFromFrontEnd) {
+                // If the cookie code does not match the provided code, update the cookie
+                Cookie::set('pf_session_code', $codeFromFrontEnd, 99999, '/', null, true, true);
+            }
             $filter = [
                 'Code' => $codeFromFrontEnd,
             ];
