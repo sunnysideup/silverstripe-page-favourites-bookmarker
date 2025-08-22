@@ -39,6 +39,12 @@ class BookmarkList extends DataObject
         'Bookmarks.Count' => 'Number of Bookmarks',
     ];
 
+    private static $default_sort = '"ID" DESC';
+
+    private static $cascade_deletes = [
+        'Bookmarks' => true,
+    ];
+
     public function removeByUrl(string $url)
     {
         $bookmarks = $this->Bookmarks()->filter(['URL' => $url]);
@@ -47,24 +53,9 @@ class BookmarkList extends DataObject
         }
     }
 
-    public function addByUrlAndTitle(string $url, string $title): Bookmark
+    public function addByUrlAndTitle(string $url, string $title): ?Bookmark
     {
-        $filter = [
-            'URL' => $url,
-        ];
-        $bookmark = $this->Bookmarks()->filter($filter)->first();
-        if (!$bookmark) {
-            $maxSort = 0;
-            if ($this->Bookmarks()->exists()) {
-                $maxSort = ($this->Bookmarks()->max('SortOrder') ?: 0) + 1;
-            }
-            $bookmark = Bookmark::create($filter);
-            $bookmark->BookmarkListID = $this->ID;
-            $bookmark->SortOrder = $maxSort;
-        }
-        $bookmark->Title = $title;
-        $bookmark->write();
-        return $bookmark;
+        return Bookmark::create_bookmark($url, $title, $this->ID);
     }
 
     public function getTitle()

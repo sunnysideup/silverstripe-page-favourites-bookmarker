@@ -10,14 +10,17 @@ class Bookmark extends DataObject
 {
     private static $table_name = 'Bookmark';
     private static $db = [
-        'Title' => 'Varchar(255)',
-        'URL' => 'Varchar(512)',
         'SortOrder' => 'Int',
     ];
 
     private static $has_one = [
-        'Page' => Page::class,
         'BookmarkList' => BookmarkList::class,
+        'BookmarkUrl' => BookmarkUrl::class,
+    ];
+
+    private static $casting = [
+        'Title' => 'Varchar',
+        'URL' => 'ExternalURL',
     ];
 
     private static $summary_fields = [
@@ -33,14 +36,23 @@ class Bookmark extends DataObject
         'SortOrder' => true,
     ];
 
-
-    public function onBeforeWrite()
+    public static function create_bookmark(string $url, string $title, int $listID): ?Bookmark
     {
-        parent::onBeforeWrite();
-        if (!$this->SortOrder) {
-            $this->SortOrder = 0;
+        $bookmarkUrl = BookmarkUrl::find_or_make_bookmark_url($title, $url);
+        if (!$bookmarkUrl) {
+            return null;
         }
-        $this->findMatchingPage();
+        $filter = [
+            'BookmarkUrlID' => $bookmarkUrl->ID,
+            'BookmarkListID' => $listID
+        ];
+        $bookmark = Bookmark::get()->filter($filter)->first();
+        if (!$bookmark) {
+            $bookmark = Bookmark::create($filter);
+            $bookmark->write();
+        }
+
+        return $bookmark;
     }
 
     protected function findMatchingPage()
@@ -55,6 +67,33 @@ class Bookmark extends DataObject
             }
         }
     }
+
+
+    private static $default_sort = '"SortOrder" ASC';
+
+    public function getTitle()
+    {
+        return $this->BookmarkUrl()->Title ?: '[no title]';
+    }
+
+    public function getURL()
+    {
+        return $this->BookmarkUrl()->URL ?: '[no URL]';
+    }
+
+    public function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+        if (! $this->exists()) {
+            $maxSort = 0;
+            $list = Bookmark::get()->filter(['BookmarkListID' => $this->BookmarkListID]);
+            if ($list->exists()) {
+                $maxSort = $list->max('SortOrder') ?: 0;
+            }
+            $this->SortOrder = $maxSort + 1;
+        }
+    }
+
     public function canCreate($member = null, $context = [])
     {
         return false; // Prevent creation of new bookmarks directly

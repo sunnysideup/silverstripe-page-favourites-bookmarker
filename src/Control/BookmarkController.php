@@ -43,7 +43,6 @@ class BookmarkController extends Controller
             return $this->sendResponse([
                 'status' => 'success',
                 'bookmarks' => $this->bookmarkList->Bookmarks()->toArray(),
-                'numberOfBookmarks' => $this->bookmarkList->Bookmarks()->count(),
             ]);
         } else {
             return $this->sendResponse(['status' => 'error', 'message' => 'Bookmark list not found'], 404);
@@ -94,23 +93,36 @@ class BookmarkController extends Controller
     protected function addBookmark(?array $payload = null)
     {
         if ($payload) {
-            $this->bookmarkList->addByUrlAndTitle(
+            $outcome = $this->bookmarkList->addByUrlAndTitle(
                 $payload['url'],
                 $payload['title']
             );
+            if ($outcome) {
+                return $this->sendResponse(
+                    ['status' => 'success',]
+                );
+            } else {
+                return $this->sendResponse(
+                    ['status' => 'error', 'message' => 'Failed to add bookmark'],
+                    500
+                );
+            }
         }
-        return $this->sendResponse(['status' => 'success', 'numberOfBookmarks' => $this->bookmarkList->Bookmarks()->count()]);
 
-        // Logic to add a bookmark
+        return $this->sendResponse(
+            ['status' => 'error', 'message' => 'No data received for bookmark'],
+            400
+        );
     }
 
     protected function removeBookmark(?array $payload = null)
     {
         if ($payload) {
             $this->bookmarkList->removeByUrl($payload['url']);
+            return $this->sendResponse(['status' => 'success',]);
         }
-        return $this->sendResponse(['status' => 'success', 'numberOfBookmarks' => $this->bookmarkList->Bookmarks()->count()]);
-        // Logic to remove a bookmark
+
+        return $this->sendResponse(['status' => 'error', 'message' => 'No data received for bookmark'], 400);
     }
 
     protected function resortBookmarks(?array $payload = null)
@@ -152,7 +164,7 @@ class BookmarkController extends Controller
                 }
             }
         }
-        return $this->sendResponse(['status' => 'success', 'numberOfBookmarks' => $this->bookmarkList->Bookmarks()->count()]);
+        return $this->sendResponse(['status' => 'success',]);
     }
 
     protected function updateListOfBookmarks()
@@ -192,8 +204,9 @@ class BookmarkController extends Controller
         $this->bookmarkList = $bookmarkList;
     }
 
-    protected function sendResponse($data, ?int $status = 200): HTTPResponse
+    protected function sendResponse(array $data, ?int $status = 200): HTTPResponse
     {
+        $data['numberOfBookmarks'] = $this->bookmarkList->Bookmarks()->count();
         return HTTPResponse::create()
             ->setBody(json_encode($data))
             ->addHeader('Content-type', 'application/json')

@@ -5,6 +5,7 @@ namespace Sunnysideup\PageFavouritesBookmarker\Admin;
 use SilverStripe\Admin\ModelAdmin;
 use Sunnysideup\PageFavouritesBookmarker\Model\Bookmark;
 use Sunnysideup\PageFavouritesBookmarker\Model\BookmarkList;
+use Sunnysideup\PageFavouritesBookmarker\Model\BookmarkUrl;
 
 class BookmarkAdmin extends ModelAdmin
 {
@@ -12,6 +13,7 @@ class BookmarkAdmin extends ModelAdmin
     private static $managed_models = [
         BookmarkList::class,
         Bookmark::class,
+        BookmarkUrl::class,
     ];
 
     private static $url_segment = 'bookmark-favourites';
