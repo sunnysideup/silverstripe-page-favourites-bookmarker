@@ -55,19 +55,6 @@ class Bookmark extends DataObject
         return $bookmark;
     }
 
-    protected function findMatchingPage()
-    {
-        if (! $this->PageID) {
-            $parts = parse_url($this->URL);
-            if (!empty($parts['path'])) {
-                $page = SiteTree::get_by_link($parts['path']);
-                if ($page) {
-                    $this->PageID = $page->ID;
-                }
-            }
-        }
-    }
-
 
     private static $default_sort = '"SortOrder" ASC';
 

@@ -20,4 +20,10 @@ class CodeMaker
 
         return $result;
     }
+
+    public static function sanitize_code(string $code): string
+    {
+        // Remove any characters that are not alphanumeric
+        return preg_replace('/[^a-zA-Z0-9]/', '', $code);
+    }
 }

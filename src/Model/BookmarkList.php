@@ -14,8 +14,6 @@ use Sunnysideup\PageFavouritesBookmarker\Control\BookmarkController;
 class BookmarkList extends DataObject
 {
     private static $table_name = 'BookmarkList';
-
-
     private static $db = [
         'Code' => 'Varchar(12)',
         'Session' => 'Varchar(32)',
@@ -56,6 +54,17 @@ class BookmarkList extends DataObject
     public function addByUrlAndTitle(string $url, string $title): ?Bookmark
     {
         return Bookmark::create_bookmark($url, $title, $this->ID);
+    }
+
+    public function addManyByBookmarkUrlIds($array): void
+    {
+        $ids = array_filter(explode(',', $array), 'is_numeric');
+        foreach ($ids as $id) {
+            $bookmarkUrl = BookmarkUrl::get()->byID(intval($id));
+            if ($bookmarkUrl) {
+                $this->addByUrlAndTitle($bookmarkUrl->URL, $bookmarkUrl->Title);
+            }
+        }
     }
 
     public function getTitle()
@@ -112,6 +121,23 @@ class BookmarkList extends DataObject
 
     public function ShareLink()
     {
-        return BookmarkController::my_link('share' . '/' . $this->Code);
+        $items = $this->Bookmarks()->columnUnique('BookmarkUrlID');
+        return BookmarkController::my_link('share' . '/' . implode(',', $items));
+    }
+
+    public function BookmarksAsArray(): array
+    {
+        $data = [];
+        foreach ($this->Bookmarks() as $bookmark) {
+            $url = $bookmark->BookmarkUrl();
+            if ($url->IsValidBookmark()) {
+                $data[] = [
+                    'title' => $url->Title,
+                    'url' => $url->URL,
+                    'ts' => strtotime($bookmark->Created),
+                ];
+            }
+        }
+        return $data;
     }
 }

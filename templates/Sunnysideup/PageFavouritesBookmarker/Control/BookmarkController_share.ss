@@ -6,7 +6,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       // Your script logic here
-      localStorage.setItem('pf-store-updated-bookmark-list', JSON.stringify($BookmarkList.RAW));
+      window.localStorage.setItem($NameOfTemporarySharedStore, JSON.stringify($BookmarkListAsJson.RAW));
 
       // Redirect to homepage after script
       window.location.href = '$RedirectURL';
