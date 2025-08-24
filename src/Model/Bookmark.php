@@ -93,6 +93,6 @@ class Bookmark extends DataObject
 
     public function canDelete($member = null)
     {
-        return false;
+        return true;
     }
 }

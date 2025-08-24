@@ -42,33 +42,39 @@ class BookmarkController extends Controller
     public function share($request = null)
     {
         // start list - and removing existing bookmarks
-        $this->initSession();
-        if ($this->bookmarkList === null) {
-            return $this->sendResponse(['status' => 'error', 'message' => 'Bookmark list not initialized'], 500);
-        }
-        $this->bookmarkList->Bookmarks()->removeAll();
+        if ($this->initSession()) {
+            if ($this->bookmarkList === null) {
+                return $this->sendResponse(['status' => 'error', 'message' => 'Bookmark list not initialized'], 500);
+            }
+            $this->bookmarkList->Bookmarks()->removeAll();
 
-        // get items and the new ones
-        $items = $request->param('ID');
-        if (!$items) {
-            return $this->httpError(404, 'No items provided');
-        }
-        $items = explode(',', $items);
-        $this->bookmarkList->addManyByBookmarkUrlIds($items);
-        $data = [];
-        $data['code'] = $this->bookmarkList->Code;
-        $data['numberOfBookmarks'] = $this->bookmarkList->Bookmarks()->count();
-        $data['bookmarks'] = $this->bookmarkList->BookmarksAsArray();
+            // get items and the new ones
+            $items = $request->param('ID');
+            if (!$items) {
+                return $this->httpError(404, 'No items provided');
+            }
+            $items = explode(',', $items);
+            $this->bookmarkList->addManyByBookmarkUrlIds($items);
+            $data = [];
+            $data['code'] = $this->bookmarkList->Code;
+            $data['numberOfBookmarks'] = $this->bookmarkList->Bookmarks()->count();
+            $data['bookmarks'] = $this->bookmarkList->BookmarksAsArray();
 
-        // render the share template
-        return $this->renderWith(
-            BookmarkController::class . '_share',
-            [
-                'BookmarkListAsJson' => json_encode($data),
-                'BookmarkListCode' => $this->bookmarkList->Code,
-                'RedirectURL' => $this->config()->get('share_redirect_url'),
-                'NameOfTemporarySharedStore' =>  $this->config()->get('front_end_temporary_share_cookie_name')
-            ]
+            // render the share template
+            return $this->renderWith(
+                BookmarkController::class . '_share',
+                [
+                    'BookmarkListAsJson' => json_encode($data),
+                    'BookmarkListCode' => $this->bookmarkList->Code,
+                    'RedirectURL' => $this->config()->get('share_redirect_url'),
+                    'NameOfTemporarySharedStore' =>  $this->config()->get('front_end_temporary_share_cookie_name')
+                ]
+            );
+        }
+        return $this->httpError(
+            500,
+            'Could not initialize session for sharing bookmarks',
+
         );
     }
 
@@ -215,17 +221,16 @@ class BookmarkController extends Controller
                 }
             }
             $filter['Code'] = $codeFromFrontEnd;
-            $bookmarkList = BookmarkList::get()->filter($filter)->first();
-            if (! $bookmarkList) {
-                $bookmarkList = BookmarkList::create($filter);
-                $bookmarkList->write();
-            }
         }
-        $this->bookmarkList = $bookmarkList;
+        $this->bookmarkList = BookmarkList::get()->filter($filter)->first();
+        if (! $this->bookmarkList) {
+            $this->bookmarkList = BookmarkList::create($filter);
+        }
+        $this->bookmarkList->write(false, false, true);
         return $this->bookmarkList->exists();
     }
 
-    protected function sendResponse(array $data, ?int $status = 200): HTTPResponse
+    protected function sendResponse(?array $data = [], ?int $status = 200): HTTPResponse
     {
         if (!isset($data['status'])) {
             $data['status'] = 'success';

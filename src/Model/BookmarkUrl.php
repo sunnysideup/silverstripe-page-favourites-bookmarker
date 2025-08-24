@@ -11,7 +11,7 @@ class BookmarkUrl extends DataObject
     private static $table_name = 'BookmarkUrl';
     private static $db = [
         'Title' => 'Varchar(255)',
-        'URL' => 'Varchar(512)',
+        'URL' => 'ExternalURL(755)',
         'SortOrder' => 'Int',
     ];
 
@@ -36,7 +36,7 @@ class BookmarkUrl extends DataObject
     ];
 
     private static $cascade_deletes = [
-        'Bookmarks' => true,
+        'Bookmarks',
     ];
 
     public static function find_or_make_bookmark_url(string $title, string $url): ?BookmarkUrl
@@ -104,6 +104,6 @@ class BookmarkUrl extends DataObject
 
     public function canDelete($member = null)
     {
-        return false;
+        return true;
     }
 }

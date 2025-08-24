@@ -16,7 +16,6 @@ class BookmarkList extends DataObject
     private static $table_name = 'BookmarkList';
     private static $db = [
         'Code' => 'Varchar(12)',
-        'Session' => 'Varchar(32)',
     ];
     private static $casting = [
         'Title' => 'Varchar',
@@ -40,14 +39,21 @@ class BookmarkList extends DataObject
     private static $default_sort = '"ID" DESC';
 
     private static $cascade_deletes = [
-        'Bookmarks' => true,
+        'Bookmarks',
+    ];
+
+    private static $indexes = [
+        'Code',
     ];
 
     public function removeByUrl(string $url)
     {
-        $bookmarks = $this->Bookmarks()->filter(['URL' => $url]);
-        foreach ($bookmarks as $bookmark) {
-            $bookmark->delete();
+        $bookmarksUrls = BookmarkUrl::get()->filter(['URL' => $url])->columnUnique('ID');
+        if (count($bookmarksUrls)) {
+            $bookmarks = $this->Bookmarks()->filter(['BookmarkUrlID' => $bookmarksUrls]);
+            foreach ($bookmarks as $bookmark) {
+                $bookmark->delete();
+            }
         }
     }
 
@@ -111,12 +117,12 @@ class BookmarkList extends DataObject
 
     public function canEdit($member = null)
     {
-        return false;
+        return true;
     }
 
     public function canDelete($member = null)
     {
-        return false; // Prevent deletion of bookmark lists directly
+        return true; // Prevent deletion of bookmark lists directly
     }
 
     public function ShareLink()
