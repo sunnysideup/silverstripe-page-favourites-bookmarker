@@ -53,8 +53,8 @@ class BookmarkController extends Controller
             if (!$items) {
                 return $this->httpError(404, 'No items provided');
             }
-            $items = explode(',', $items);
-            $this->bookmarkList->addManyByBookmarkUrlIds($items);
+            $array = explode(',', $items);
+            $this->bookmarkList->addManyByBookmarkUrlIds($array);
             $data = [];
             $data['code'] = $this->bookmarkList->Code;
             $data['numberOfBookmarks'] = $this->bookmarkList->Bookmarks()->count();
@@ -92,7 +92,7 @@ class BookmarkController extends Controller
                 );
             }
             return $this->sendResponse([
-                'bookmarks' => $this->bookmarkList->Bookmarks()->toArray(),
+                'bookmarks' => $this->bookmarkList->BookmarksAsArray(),
             ]);
         } else {
             return $this->sendResponse(['status' => 'error', 'message' => 'Bookmark list not found'], 404);

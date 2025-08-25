@@ -64,7 +64,7 @@ class BookmarkList extends DataObject
 
     public function addManyByBookmarkUrlIds($array): void
     {
-        $ids = array_filter(explode(',', $array), 'is_numeric');
+        $ids = array_filter($array, 'is_numeric');
         foreach ($ids as $id) {
             $bookmarkUrl = BookmarkUrl::get()->byID(intval($id));
             if ($bookmarkUrl) {
