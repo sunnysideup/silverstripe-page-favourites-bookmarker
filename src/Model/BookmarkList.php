@@ -43,7 +43,7 @@ class BookmarkList extends DataObject
     ];
 
     private static $indexes = [
-        'Code',
+        'Code' => true,
     ];
 
     public function removeByUrl(string $url)
