@@ -9,6 +9,7 @@ use SilverStripe\Control\Session;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Security\Security;
 use Sunnysideup\PageFavouritesBookmarker\Api\CodeMaker;
+use Sunnysideup\PageFavouritesBookmarker\Model\Bookmark;
 use Sunnysideup\PageFavouritesBookmarker\Model\BookmarkList;
 
 class BookmarkController extends Controller
@@ -86,10 +87,9 @@ class BookmarkController extends Controller
         $this->initSession($code);
         if ($this->bookmarkList) {
             foreach ($bookmarks as $bookmark) {
-                $this->bookmarkList->addByUrlAndTitle(
-                    $bookmark['url'] ?? '',
-                    $bookmark['title'] ?? ''
-                );
+                if (!empty($bookmark['url'])) {
+                    $this->addBookmarkInner($bookmark);
+                }
             }
             return $this->sendResponse([
                 'bookmarks' => $this->bookmarkList->BookmarksAsArray(),
@@ -126,10 +126,7 @@ class BookmarkController extends Controller
     protected function addBookmark(?array $payload = null)
     {
         if ($payload) {
-            $outcome = $this->bookmarkList->addByUrlAndTitle(
-                $payload['url'],
-                $payload['title']
-            );
+            $outcome = $this->addBookmarkInner($payload);
             if ($outcome) {
                 return $this->sendResponse();
             } else {
@@ -144,6 +141,21 @@ class BookmarkController extends Controller
             ['status' => 'error', 'message' => 'No data received for bookmark'],
             400
         );
+    }
+
+    protected function addBookmarkInner(?array $payload = null): Bookmark|null
+    {
+        if ($payload) {
+            return $this->bookmarkList->addByVars(
+                [
+                    'URL' => trim((string) $payload['url'] ?? ''),
+                    'Title' => trim((string) $payload['title'] ?? ''),
+                    'ImageLink' => trim((string) $payload['imagelink'] ?? ''),
+                    'Description' => trim((string) $payload['description'] ?? '')
+                ]
+            );
+        }
+        return null;
     }
 
     protected function removeBookmark(?array $payload = null)

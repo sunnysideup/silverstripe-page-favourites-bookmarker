@@ -57,9 +57,9 @@ class BookmarkList extends DataObject
         }
     }
 
-    public function addByUrlAndTitle(string $url, string $title): ?Bookmark
+    public function addByVars(array $vars): ?Bookmark
     {
-        return Bookmark::create_bookmark($url, $title, $this->ID);
+        return Bookmark::create_bookmark($this->ID, $vars);
     }
 
     public function addManyByBookmarkUrlIds($array): void
@@ -68,7 +68,7 @@ class BookmarkList extends DataObject
         foreach ($ids as $id) {
             $bookmarkUrl = BookmarkUrl::get()->byID(intval($id));
             if ($bookmarkUrl) {
-                $this->addByUrlAndTitle($bookmarkUrl->URL, $bookmarkUrl->Title);
+                Bookmark::create_bookmark_from_existing($this->ID, $bookmarkUrl);
             }
         }
     }
@@ -83,7 +83,7 @@ class BookmarkList extends DataObject
         if ($this->MemberID) {
             return $this->Member()->getName();
         }
-        return 'Anonymous';
+        return 'Anonymous List #' . $this->ID;
     }
 
     public function getCMSFields()
@@ -117,12 +117,12 @@ class BookmarkList extends DataObject
 
     public function canEdit($member = null)
     {
-        return true;
+        return false;
     }
 
     public function canDelete($member = null)
     {
-        return true; // Prevent deletion of bookmark lists directly
+        return parent::canDelete($member); // Prevent deletion of bookmark lists directly
     }
 
     public function ShareLink()

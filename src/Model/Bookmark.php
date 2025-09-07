@@ -36,10 +36,19 @@ class Bookmark extends DataObject
         'SortOrder' => true,
     ];
 
-    public static function create_bookmark(string $url, string $title, int $listID): ?Bookmark
+    private static $default_sort = '"SortOrder" ASC';
+
+    public static function create_bookmark(int $listID, array $vars): ?Bookmark
     {
-        $bookmarkUrl = BookmarkUrl::find_or_make_bookmark_url($title, $url);
+        $bookmarkUrl = BookmarkUrl::find_or_make_bookmark_url($vars);
         if (!$bookmarkUrl) {
+            return null;
+        }
+        return self::create_bookmark_from_existing($listID, $bookmarkUrl);
+    }
+    public static function create_bookmark_from_existing(int $listID, BookmarkUrl $bookmarkUrl): ?Bookmark
+    {
+        if (! $bookmarkUrl->exists()) {
             return null;
         }
         $filter = [
@@ -56,7 +65,6 @@ class Bookmark extends DataObject
     }
 
 
-    private static $default_sort = '"SortOrder" ASC';
 
     public function getTitle()
     {
@@ -94,5 +102,12 @@ class Bookmark extends DataObject
     public function canDelete($member = null)
     {
         return true;
+    }
+
+    public function getCMSFields()
+    {
+        $fields = parent::getCMSFields();
+        $fields->removeByName('SortOrder');
+        return $fields;
     }
 }
