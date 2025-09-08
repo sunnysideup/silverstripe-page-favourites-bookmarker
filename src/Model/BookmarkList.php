@@ -140,6 +140,8 @@ class BookmarkList extends DataObject
                 $data[] = [
                     'title' => $url->Title,
                     'url' => $url->URL,
+                    'imagelink' => $url->ImageLink,
+                    'description' => $url->Description,
                     'ts' => strtotime($bookmark->Created),
                 ];
             }
