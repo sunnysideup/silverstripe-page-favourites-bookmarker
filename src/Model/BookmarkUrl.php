@@ -28,6 +28,7 @@ class BookmarkUrl extends DataObject
     ];
 
     private static $summary_fields = [
+        'ImageRender' => 'Image',
         'Title' => 'Page Title',
         'URL' => 'URL',
         'Bookmarks.Count' => 'Inclusion count',
