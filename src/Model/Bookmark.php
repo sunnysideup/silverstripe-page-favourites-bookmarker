@@ -31,7 +31,6 @@ class Bookmark extends DataObject
     ];
 
     private static $indexes = [
-        'Title' => true,
         'URL' => true,
         'SortOrder' => true,
     ];
