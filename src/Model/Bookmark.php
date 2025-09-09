@@ -9,6 +9,7 @@ use SilverStripe\ORM\DataObject;
 class Bookmark extends DataObject
 {
     private static $table_name = 'Bookmark';
+
     private static $db = [
         'SortOrder' => 'Int',
     ];
@@ -31,7 +32,6 @@ class Bookmark extends DataObject
     ];
 
     private static $indexes = [
-        'URL' => true,
         'SortOrder' => true,
     ];
 
