@@ -20,4 +20,14 @@ class BookmarkAdmin extends ModelAdmin
 
     private static $menu_title = 'Favourites';
     private static $menu_icon_class = 'font-icon-circle-star';
+
+    public function getList(): ?\SilverStripe\ORM\DataList
+    {
+        $list = parent::getList();
+        if ($this->modelClass === BookmarkList::class) {
+            $include = Bookmark::get()->filter(['BookmarkListID:NOT' => [null, 0]])->columnUnique('BookmarkListID');
+            $list = $list->filter(['ID' => $include]);
+        }
+        return $list;
+    }
 }

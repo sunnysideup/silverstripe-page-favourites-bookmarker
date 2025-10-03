@@ -7,6 +7,7 @@ use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Convert;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\FieldType\DBHTMLText;
 
 class BookmarkUrl extends DataObject
 {
@@ -28,7 +29,7 @@ class BookmarkUrl extends DataObject
     ];
 
     private static $summary_fields = [
-        'ImageRender' => 'Image',
+        'ImageRenderAsObject' => 'Image',
         'Title' => 'Page Title',
         'URL' => 'URL',
         'Bookmarks.Count' => 'Inclusion count',
@@ -48,6 +49,7 @@ class BookmarkUrl extends DataObject
         'Link' => 'Varchar',
         'AbsoluteLink' => 'ExternalURL',
         'ImageRender' => 'HTMLText',
+        'ImageRenderAsObject' => 'HTMLText',
     ];
 
     public static function find_or_make_bookmark_url(array $vars): ?BookmarkUrl
@@ -78,6 +80,11 @@ class BookmarkUrl extends DataObject
     public function getAbsoluteLink(): string
     {
         return Director::absoluteURL($this->toRelativeUrl((string) $this->URL));
+    }
+
+    public function getImageRenderAsObject(): DBHTMLText
+    {
+        return DBHTMLText::create_field('HTMLText', $this->getImageRender());
     }
 
     public function getImageRender(): string
