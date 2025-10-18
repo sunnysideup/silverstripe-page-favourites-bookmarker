@@ -26,6 +26,8 @@ class BookmarkAdmin extends ModelAdmin
     private static $menu_title = 'Favourites';
     private static $menu_icon_class = 'font-icon-circle-star';
 
+    private const DAYS_BACK_TRENDING = 7;
+
     public function getList(): ?\SilverStripe\ORM\DataList
     {
         $list = parent::getList();
@@ -41,35 +43,46 @@ class BookmarkAdmin extends ModelAdmin
     public function getEditForm($id = null, $fields = null)
     {
         $form = parent::getEditForm($id, $fields);
-        if ($this->modelClass === Bookmark::class) {
-        }
-        $ids = Bookmark::get()
-            ->leftJoin('BookmarkUrl', '"BookmarkUrl"."ID" = "Bookmark"."BookmarkUrlID"')
-            ->limit(300)
-            ->filter(['Created:GreaterThan' => date('Y-m-d', strtotime('-1 day'))])
-            ->column('Bookmark.PageID');
-        // count occurrences
-        $counts = array_count_values($ids);
+        if ($this->modelClass === BookmarkList::class) {
+            $ids = Bookmark::get()
+                ->leftJoin('BookmarkUrl', '"BookmarkUrl"."ID" = "Bookmark"."BookmarkUrlID"')
+                ->limit(300)
+                ->filter(
+                    [
+                        'Created:GreaterThan' => date(
+                            'Y-m-d',
+                            strtotime('-' . self::DAYS_BACK_TRENDING . ' days')
+                        ),
+                        'BookmarkUrl.PageID:GreaterThan' => 0,
+                    ]
+                )
+                ->column('BookmarkUrl.PageID');
+            // count occurrences
+            $counts = array_count_values($ids);
 
-        // remove entries with fewer than 2
-        $filtered = array_filter($counts, fn(int $count) => $count >= 2);
+            // remove entries with fewer than 2
+            $filtered = array_filter($counts, fn(int $count) => $count >= 2);
 
-        // sort by count descending
-        arsort($filtered);
-        if (! empty($filtered)) {
-            $list = Page::get()->filter(['ID' => array_keys($filtered)]);
-            $sortStatement = ArrayMethods::create_sort_statement_from_id_array($filtered, Page::class, true);
-            $list = $list->orderBy($sortStatement);
+            // sort descending by count
+            arsort($filtered, SORT_NUMERIC);
 
-            $form->Fields()->unshift(
-                GridField::create(
-                    'TrendingPages',
-                    'Trending pages',
-                    $list,
-                    GridFieldConfig_RecordViewer::create()
-                )->setDescription('<br />Pages that have been added to favourites at least twice in the last 24 hours - most popular first.')
-                    ->setForm($form)
-            );
+            // sort by count descending
+            arsort($filtered);
+            if (! empty($filtered)) {
+                $list = Page::get()->filter(['ID' => array_keys($filtered)]);
+                $sortStatement = ArrayMethods::create_sort_statement_from_id_array($filtered, Page::class, true);
+                $list = $list->orderBy($sortStatement);
+
+                $form->Fields()->unshift(
+                    GridField::create(
+                        'TrendingPages',
+                        'Trending pages',
+                        $list,
+                        GridFieldConfig_RecordViewer::create()
+                    )->setDescription('<br />Pages that have been added to favourites at least twice in the last ' . self::DAYS_BACK_TRENDING . ' days - most popular first.')
+                        ->setForm($form)
+                );
+            }
         }
         return $form;
     }
