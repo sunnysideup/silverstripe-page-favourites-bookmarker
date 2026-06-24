@@ -2,8 +2,7 @@
 
 namespace Sunnysideup\PageFavouritesBookmarker\Model;
 
-use Page;
-use SilverStripe\CMS\Model\SiteTree;
+use Override;
 use SilverStripe\ORM\DataObject;
 
 class Bookmark extends DataObject
@@ -40,16 +39,19 @@ class Bookmark extends DataObject
     public static function create_bookmark(int $listID, array $vars): ?Bookmark
     {
         $bookmarkUrl = BookmarkUrl::find_or_make_bookmark_url($vars);
-        if (!$bookmarkUrl) {
+        if (!$bookmarkUrl instanceof BookmarkUrl) {
             return null;
         }
+
         return self::create_bookmark_from_existing($listID, $bookmarkUrl);
     }
+
     public static function create_bookmark_from_existing(int $listID, BookmarkUrl $bookmarkUrl): ?Bookmark
     {
         if (! $bookmarkUrl->exists()) {
             return null;
         }
+
         $filter = [
             'BookmarkUrlID' => $bookmarkUrl->ID,
             'BookmarkListID' => $listID
@@ -65,6 +67,7 @@ class Bookmark extends DataObject
 
 
 
+    #[Override]
     public function getTitle()
     {
         return $this->BookmarkUrl()->Title ?: '[no title]';
@@ -75,7 +78,8 @@ class Bookmark extends DataObject
         return $this->BookmarkUrl()->URL ?: '[no URL]';
     }
 
-    public function onBeforeWrite()
+    #[Override]
+    protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
         if (! $this->exists()) {
@@ -84,25 +88,30 @@ class Bookmark extends DataObject
             if ($list->exists()) {
                 $maxSort = $list->max('SortOrder') ?: 0;
             }
+
             $this->SortOrder = $maxSort + 1;
         }
     }
 
+    #[Override]
     public function canCreate($member = null, $context = [])
     {
         return false; // Prevent creation of new bookmarks directly
     }
 
+    #[Override]
     public function canEdit($member = null)
     {
         return false;
     }
 
+    #[Override]
     public function canDelete($member = null)
     {
         return true;
     }
 
+    #[Override]
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();

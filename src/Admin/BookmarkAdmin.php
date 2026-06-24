@@ -2,10 +2,11 @@
 
 namespace Sunnysideup\PageFavouritesBookmarker\Admin;
 
+use Override;
+use SilverStripe\ORM\DataList;
 use Page;
 use SilverStripe\Admin\ModelAdmin;
 use SilverStripe\Forms\GridField\GridField;
-use SilverStripe\Forms\GridField\GridFieldConfig;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordViewer;
 use Sunnysideup\Ecommerce\Api\ArrayMethods;
 use Sunnysideup\PageFavouritesBookmarker\Model\Bookmark;
@@ -24,11 +25,13 @@ class BookmarkAdmin extends ModelAdmin
     private static $url_segment = 'bookmark-favourites';
 
     private static $menu_title = 'Favourites';
+
     private static $menu_icon_class = 'font-icon-circle-star';
 
-    private const DAYS_BACK_TRENDING = 7;
+    private const int DAYS_BACK_TRENDING = 7;
 
-    public function getList(): ?\SilverStripe\ORM\DataList
+    #[Override]
+    public function getList(): ?DataList
     {
         $list = parent::getList();
         if ($this->modelClass === BookmarkList::class) {
@@ -37,9 +40,11 @@ class BookmarkAdmin extends ModelAdmin
         } elseif ($this->modelClass === Bookmark::class) {
             $list = $list->sort(['ID' => 'DESC']);
         }
+
         return $list;
     }
 
+    #[Override]
     public function getEditForm($id = null, $fields = null)
     {
         $form = parent::getEditForm($id, $fields);
@@ -68,7 +73,7 @@ class BookmarkAdmin extends ModelAdmin
 
             // sort by count descending
             arsort($filtered);
-            if (! empty($filtered)) {
+            if ($filtered !== []) {
                 $list = Page::get()->filter(['ID' => array_keys($filtered)]);
                 $sortStatement = ArrayMethods::create_sort_statement_from_id_array($filtered, Page::class, true);
                 $list = $list->orderBy($sortStatement);
@@ -84,6 +89,7 @@ class BookmarkAdmin extends ModelAdmin
                 );
             }
         }
+
         return $form;
     }
 }
