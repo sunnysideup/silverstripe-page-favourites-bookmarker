@@ -2,7 +2,7 @@
 
 namespace Sunnysideup\PageFavouritesBookmarker\Model;
 
-use Page;
+use Override;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBHTMLText;
@@ -14,9 +14,11 @@ use Sunnysideup\PageFavouritesBookmarker\Control\BookmarkController;
 class BookmarkList extends DataObject
 {
     private static $table_name = 'BookmarkList';
+
     private static $db = [
         'Code' => 'Varchar(12)',
     ];
+
     private static $casting = [
         'Title' => 'Varchar',
     ];
@@ -64,7 +66,7 @@ class BookmarkList extends DataObject
 
     public function addManyByBookmarkUrlIds($array): void
     {
-        $ids = array_filter($array, 'is_numeric');
+        $ids = array_filter($array, is_numeric(...));
         foreach ($ids as $id) {
             $bookmarkUrl = BookmarkUrl::get()->byID(intval($id));
             if ($bookmarkUrl) {
@@ -73,6 +75,7 @@ class BookmarkList extends DataObject
         }
     }
 
+    #[Override]
     public function getTitle()
     {
         // $count = $this->Bookmarks()->count();
@@ -83,9 +86,11 @@ class BookmarkList extends DataObject
         if ($this->MemberID) {
             return $this->Member()->getName();
         }
+
         return 'Anonymous List #' . $this->ID;
     }
 
+    #[Override]
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
@@ -99,27 +104,32 @@ class BookmarkList extends DataObject
         return $fields;
     }
 
-    public function onBeforeWrite()
+    #[Override]
+    protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
         if (!$this->Code) {
             $this->Code = CodeMaker::make_alpha_num_code(12);
         }
+
         if (! $this->MemberID && Security::getCurrentUser()) {
             $this->MemberID = Security::getCurrentUser()->ID;
         }
     }
 
+    #[Override]
     public function canCreate($member = null, $context = [])
     {
         return false; // Prevent creation of new bookmark lists directly
     }
 
+    #[Override]
     public function canEdit($member = null)
     {
         return false;
     }
 
+    #[Override]
     public function canDelete($member = null)
     {
         return parent::canDelete($member); // Prevent deletion of bookmark lists directly
@@ -128,7 +138,7 @@ class BookmarkList extends DataObject
     public function ShareLink()
     {
         $items = $this->Bookmarks()->columnUnique('BookmarkUrlID');
-        return BookmarkController::my_link('share' . '/' . implode(',', $items));
+        return BookmarkController::my_link('share/' . implode(',', $items));
     }
 
     public function BookmarksAsArray(): array
@@ -142,10 +152,11 @@ class BookmarkList extends DataObject
                     'url' => $url->URL,
                     'imagelink' => $url->ImageLink,
                     'description' => $url->Description,
-                    'ts' => strtotime($bookmark->Created),
+                    'ts' => strtotime((string) $bookmark->Created),
                 ];
             }
         }
+
         return $data;
     }
 }

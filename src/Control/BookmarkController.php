@@ -2,10 +2,10 @@
 
 namespace Sunnysideup\PageFavouritesBookmarker\Control;
 
+use Override;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Cookie;
 use SilverStripe\Control\HTTPResponse;
-use SilverStripe\Control\Session;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Security\Security;
 use Sunnysideup\PageFavouritesBookmarker\Api\CodeMaker;
@@ -21,10 +21,13 @@ class BookmarkController extends Controller
     }
 
     private static string $url_segment = 'save-my-favourites';
+
     private static string $share_redirect_url = '/';
 
     private static string $backend_cookie_name = 'pf_store_code_backend';
+
     private static string $front_end_temporary_share_cookie_name = 'pf_store_share_bookmark_list';
+
     private static array $allowed_actions = [
         'events',
         'bookmarks',
@@ -35,7 +38,8 @@ class BookmarkController extends Controller
 
     protected ?BookmarkList $bookmarkList = null;
 
-    public function init()
+    #[Override]
+    protected function init()
     {
         parent::init();
     }
@@ -44,9 +48,10 @@ class BookmarkController extends Controller
     {
         // start list - and removing existing bookmarks
         if ($this->initSession()) {
-            if ($this->bookmarkList === null) {
+            if (!$this->bookmarkList instanceof BookmarkList) {
                 return $this->sendResponse(['status' => 'error', 'message' => 'Bookmark list not initialized'], 500);
             }
+
             $this->bookmarkList->Bookmarks()->removeAll();
 
             // get items and the new ones
@@ -54,6 +59,7 @@ class BookmarkController extends Controller
             if (!$items) {
                 return $this->httpError(404, 'No items provided');
             }
+
             $array = explode(',', $items);
             $this->bookmarkList->addManyByBookmarkUrlIds($array);
             $data = [];
@@ -72,6 +78,7 @@ class BookmarkController extends Controller
                 ]
             );
         }
+
         return $this->httpError(
             500,
             'Could not initialize session for sharing bookmarks',
@@ -85,12 +92,13 @@ class BookmarkController extends Controller
         $code = CodeMaker::sanitize_code($data['code'] ?? '');
         $bookmarks = $data['bookmarks'] ?? [];
         $this->initSession($code);
-        if ($this->bookmarkList) {
+        if ($this->bookmarkList instanceof BookmarkList) {
             foreach ($bookmarks as $bookmark) {
                 if (!empty($bookmark['url'])) {
                     $this->addBookmarkInner($bookmark);
                 }
             }
+
             return $this->sendResponse([
                 'bookmarks' => $this->bookmarkList->BookmarksAsArray(),
             ]);
@@ -107,19 +115,17 @@ class BookmarkController extends Controller
         if ($this->initSession($code)) {
             $payload = $data['payload'] ?? null;
             if (isset($data['type'])) {
-                switch ($data['type']) {
-                    case 'removed':
-                        return $this->removeBookmark($payload);
-                    case 'added':
-                        return $this->addBookmark($payload);
-                    case 'reordered':
-                        return $this->resortBookmarks($payload);
-                    default:
-                        return $this->sendResponse(['status' => 'error', 'message' => 'Unknown action'], 400);
-                }
+                return match ($data['type']) {
+                    'removed' => $this->removeBookmark($payload),
+                    'added' => $this->addBookmark($payload),
+                    'reordered' => $this->resortBookmarks($payload),
+                    default => $this->sendResponse(['status' => 'error', 'message' => 'Unknown action'], 400),
+                };
             }
+
             return $this->sendResponse(['status' => 'error', 'message' => 'No action specified'], 400);
         }
+
         return $this->sendResponse(['status' => 'error', 'message' => 'Session initialization failed'], 500);
     }
 
@@ -127,7 +133,7 @@ class BookmarkController extends Controller
     {
         if ($payload) {
             $outcome = $this->addBookmarkInner($payload);
-            if ($outcome) {
+            if ($outcome instanceof Bookmark) {
                 return $this->sendResponse();
             } else {
                 return $this->sendResponse(
@@ -155,6 +161,7 @@ class BookmarkController extends Controller
                 ]
             );
         }
+
         return null;
     }
 
@@ -181,6 +188,7 @@ class BookmarkController extends Controller
                 $toObj->SortOrder = $fromObj->SortOrder + 1;
                 $toObj->write();
             }
+
             if ($from > $to) {
                 // lets say from 12 to 4 then we need to move all objects from 5 to 11 up by one
                 // the ones below 4 will not change
@@ -207,6 +215,7 @@ class BookmarkController extends Controller
                 }
             }
         }
+
         return $this->sendResponse();
     }
 
@@ -232,12 +241,15 @@ class BookmarkController extends Controller
                     Cookie::set($codeCookieName, $codeFromFrontEnd, 99999, '/', null, true, true);
                 }
             }
+
             $filter['Code'] = $codeFromFrontEnd;
         }
+
         $this->bookmarkList = BookmarkList::get()->filter($filter)->first();
         if (! $this->bookmarkList) {
             $this->bookmarkList = BookmarkList::create($filter);
         }
+
         $this->bookmarkList->write(false, false, true);
         return $this->bookmarkList->exists();
     }
@@ -247,6 +259,7 @@ class BookmarkController extends Controller
         if (!isset($data['status'])) {
             $data['status'] = 'success';
         }
+
         $data['numberOfBookmarks'] = $this->bookmarkList->Bookmarks()->count();
         $data['shareLink'] = $this->bookmarkList->ShareLink();
         $data['code'] = $this->bookmarkList->Code;
@@ -262,6 +275,7 @@ class BookmarkController extends Controller
         if (empty($jsonString)) {
             return [];
         }
+
         return json_decode($jsonString, true);
     }
 }
