@@ -13,8 +13,6 @@ class BookmarkRequirements
         if (!$controller instanceof Controller) {
             $controller = Controller::curr();
         }
-
-        $data['userIsLoggedIn'] = (bool) Security::getCurrentUser();
         if ($controller->hasMethod('PageFavouritesBookmarkerMoreRequirementsData')) {
             $data += $controller->PageFavouritesBookmarkerMoreRequirementsData();
         }
