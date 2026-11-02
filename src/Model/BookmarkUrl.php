@@ -92,7 +92,7 @@ class BookmarkUrl extends DataObject
         if (! $this->ImageLink) {
             return '';
         }
-        return '<img src="' . Director::absoluteURL($this->toRelativeUrl((string) $this->ImageLink)) . '" alt="' . Convert::raw2att($this->Title) . '" height="50" />';
+        return '<img src="' . Convert::raw2att(Director::absoluteURL($this->toRelativeUrl((string) $this->ImageLink))) . '" alt="' . Convert::raw2att($this->Title) . '" height="50" />';
     }
 
     public function canCreate($member = null, $context = [])
@@ -144,14 +144,14 @@ class BookmarkUrl extends DataObject
         $fields = parent::getCMSFields();
         $fields->removeByName('SortOrder');
         $fields->dataFieldByName('URL')
-            ?->setDescription('<a href="' . $this->getLink() . '">Open Link</a>');
+            ?->setDescription('<a href="' . Convert::raw2att($this->getLink()) . '">Open Link</a>');
         $fields->dataFieldByName('ImageLink')
             ?->setDescription($this->getImageRender());
         if ($this->PageID) {
             $page = $this->Page();
             $fields->dataFieldByName('PageID')
                 ?->setDescription('The page this bookmark is linked to. This is set automatically if the URL matches a page on this site. <br />
-                    <a href="' . ($page ? $page->Link() : '#') . '">View Page</a>');
+                    <a href="' . Convert::raw2att($page ? $page->Link() : '#') . '">View Page</a>');
         }
         return $fields;
     }
@@ -159,6 +159,10 @@ class BookmarkUrl extends DataObject
     protected function isValidUrl(string $url): bool
     {
         if (trim($url) === '') {
+            return false;
+        }
+        // visitors can submit these: no quotes, brackets, backslashes, spaces or control characters.
+        if (preg_match('/[\x00-\x20"\'<>\\\\`\x7f]/', $url)) {
             return false;
         }
         $test = Director::absoluteURL($url);

@@ -65,7 +65,7 @@ class BookmarkController extends Controller
             return $this->renderWith(
                 BookmarkController::class . '_share',
                 [
-                    'BookmarkListAsJson' => json_encode($data),
+                    'BookmarkListAsJson' => json_encode($data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT),
                     'BookmarkListCode' => $this->bookmarkList->Code,
                     'RedirectURL' => $this->config()->get('share_redirect_url'),
                     'NameOfTemporarySharedStore' =>  $this->config()->get('front_end_temporary_share_cookie_name')
